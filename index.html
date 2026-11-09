@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Swiss 4000ers</title>
+<meta name="theme-color" content="#24507a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="4000ers">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--ink:#1d2330;--muted:#5d6577;--line:#e3e1dc;--accent:#c8102e;--accent2:#24507a;--ok:#2e9e5b;--chip:#eef0f4}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--ink:#e9ecf2;--muted:#9aa3b5;--line:#2e3542;--chip:#262d39;--accent2:#7fb2e5}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:12px 16px 0;border-bottom:1px solid var(--line);background:var(--card)}
+header h1{margin:0;font-size:20px;letter-spacing:-.01em}
+header p{margin:2px 0 8px;color:var(--muted);font-size:13px}
+nav{display:flex;gap:4px}
+nav button{border:none;background:none;color:var(--muted);font-size:14px;font-weight:600;padding:8px 12px;border-bottom:3px solid transparent;cursor:pointer}
+nav button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.view{display:none}.view.on{display:block}
+.wrap{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 100px)}
+aside{border-right:1px solid var(--line);padding:14px 16px;background:var(--card);overflow:auto;max-height:calc(100vh - 100px);position:sticky;top:0}
+main{min-width:0;display:flex;flex-direction:column}
+#map{height:46vh;min-height:300px;border-bottom:1px solid var(--line)}
+.f{margin-bottom:12px}
+label.h{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+select,input[type=search],input[type=number],input[type=date],input[type=text],input[type=password],textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;margin:4px 0}
+.stats{font-size:13px;color:var(--muted);padding:10px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--line);background:var(--card)}
+.stats b{color:var(--ink)}
+#list{padding:12px 16px 40px;display:grid;gap:12px}
+.peak,.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.peak.sel{outline:2px solid var(--accent2)}
+.ph{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:10px}
+.ph img{width:150px;height:94px;object-fit:cover;border-radius:8px;background:var(--chip)}
+.ph h2{margin:0;font-size:18px}
+.sub{color:var(--muted);font-size:13px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.tag{font-size:12px;background:var(--chip);color:var(--ink);border:none;border-radius:6px;padding:2px 7px;text-decoration:none;cursor:default}
+button.tag,a.tag{cursor:pointer}
+.done-tag{background:var(--ok);color:#fff}
+.g{display:inline-block;text-align:center;font-weight:700;font-size:12px;color:#fff;border-radius:5px;padding:2px 6px;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;background:var(--bg)}
+td.n{white-space:nowrap}
+a{color:var(--accent2)}
+.pill{font-size:11px;color:#fff;border-radius:4px;padding:1px 5px;margin-left:4px;white-space:nowrap}
+.norm{background:var(--accent)}.arch{background:var(--muted)}.ski{background:#3b7dd8;margin:0}.sum{background:#d88a1e;margin:0}.lift{background:#6b5bd6}.c2c{background:#0f8a8a}.donep{background:var(--ok)}
+.muted{color:var(--muted)}
+.tbl{overflow-x:auto}
+details summary{cursor:pointer;padding:6px 10px;font-size:13px;color:var(--muted)}
+.legend{font-size:12px;color:var(--muted);line-height:1.6}
+.leaflet-popup-content{margin:10px 12px;font:13px/1.4 system-ui,sans-serif}
+.pop img{width:220px;height:138px;object-fit:cover;border-radius:6px;display:block;margin-bottom:6px}
+.pin{width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.pin.done{outline:3px solid var(--ok)}
+#toggleF{display:none}
+footer{font-size:12px;color:var(--muted);padding:16px}
+.logwrap{max-width:1100px;margin:0 auto;padding:16px;display:grid;gap:16px}
+.card{padding:14px 16px}
+.card h3{margin:0 0 10px;font-size:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:24px}
+.kpi span{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:1px solid var(--accent2);background:var(--accent2);color:#fff;border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer}
+.btn.sec{background:transparent;color:var(--accent2)}
+.btn.del{border-color:var(--accent);color:var(--accent);background:transparent;padding:3px 8px;font-size:12px}
+.bar{height:8px;border-radius:4px;background:var(--chip);overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.year{font-weight:700;margin:14px 0 4px;font-size:15px}
+.entry{display:grid;grid-template-columns:92px 1fr auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:start}
+.togo{display:flex;flex-wrap:wrap;gap:6px}
+@media (max-width:860px){
+ .wrap{grid-template-columns:1fr}
+ aside{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--line);display:none}
+ aside.open{display:block}
+ #toggleF{display:inline-block}
+ #map{height:42vh}
+ .ph{grid-template-columns:96px 1fr}.ph img{width:96px;height:72px}
+ .hide-m{display:none}
+ .grid2{grid-template-columns:1fr}
+ .entry{grid-template-columns:1fr auto}.entry .d{grid-column:1/-1}
+}
+</style>
+<style>
+body{padding-bottom:env(safe-area-inset-bottom)}
+header{padding-top:max(12px, env(safe-area-inset-top))}
+nav{overflow-x:auto}
+#authView{max-width:420px;margin:8vh auto;padding:0 16px}
+#authView .card{padding:22px}
+#authView h2{margin:0 0 4px}
+.err{color:var(--accent);font-size:13px;min-height:18px;margin-top:6px}
+.okmsg{color:var(--ok);font-size:13px}
+.user{margin-left:auto;font-size:12px;color:var(--muted);align-self:center;white-space:nowrap}
+.pw{font:600 18px ui-monospace,Menlo,monospace;background:var(--chip);padding:6px 10px;border-radius:8px;display:inline-block;user-select:all}
+#syncState{font-size:12px}
+.hidden{display:none !important}
+#boot{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="boot">Loading…</div>
+
+<!-- ============ LOGIN / PASSWORD ============ -->
+<div id="authView" class="hidden">
+ <div class="card" id="loginCard">
+  <h2>Swiss 4000ers</h2>
+  <p class="sub">Private app. Log in with the account you were invited with.</p>
+  <form id="loginForm">
+   <div class="f"><label class="h">E-mail</label><input type="text" id="liEmail" autocomplete="username" inputmode="email" autocapitalize="off" required></div>
+   <div class="f"><label class="h">Password</label><input type="password" id="liPw" autocomplete="current-password" required style="width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px"></div>
+   <button class="btn" type="submit" style="width:100%">Log in</button>
+   <div class="err" id="liErr"></div>
+  </form>
+  <p class="sub">Forgot your password? Ask the admin to reset it — you'll get a new temporary password.</p>
+ </div>
+ <div class="card hidden" id="pwCard">
+  <h2>Choose your password</h2>
+  <p class="sub" id="pwIntro">Set a personal password (at least 8 characters).</p>
+  <form id="pwForm">
+   <div class="f"><label class="h">Your name (shown in the app)</label><input type="text" id="pwName" autocomplete="name"></div>
+   <div class="f"><label class="h">New password</label><input type="password" id="pw1" autocomplete="new-password" minlength="8" required style="width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px"></div>
+   <div class="f"><label class="h">Repeat password</label><input type="password" id="pw2" autocomplete="new-password" minlength="8" required style="width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px"></div>
+   <button class="btn" type="submit" style="width:100%">Save password</button>
+   <div class="err" id="pwErr"></div>
+  </form>
+ </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appView" class="hidden">
+<header>
+ <h1>Swiss 4000ers</h1>
+ <p>All 48 peaks of 4000 m in Switzerland and on its borders: every SAC route, grades SAC / French, season, train time and days.</p>
+ <nav><button data-view="finder" class="on">Finder</button><button data-view="log">My log</button><button data-view="account">Account</button><button data-view="admin" id="navAdmin" class="hidden">Admin</button><span class="user" id="whoami"></span></nav>
+</header>
+
+<section id="v-finder" class="view on">
+<div class="wrap">
+<aside id="filters">
+ <div class="f"><label class="h">Search</label><input type="search" id="q" placeholder="Peak, route, hut…"></div>
+ <div class="f"><label class="h">Season</label><div class="seg" id="season">
+  <button data-v="all" class="on">All</button><button data-v="Summer">Summer</button><button data-v="Winter / spring (ski)">Ski (winter/spring)</button></div></div>
+ <div class="f"><label class="h">Difficulty (SAC / French)</label><div class="row2"><select id="gmin"></select><select id="gmax"></select></div>
+  <div class="legend">L/F easy · WS/PD moderate · ZS/AD fairly difficult · S/D difficult · SS/TD very difficult · AS/ED extremely difficult · EX/ABO exceptional. Rock grade in brackets, e.g. (4a).</div></div>
+ <div class="f"><label class="h">Cable cars</label><div class="seg" id="lift"><button data-v="1" class="on">Allowed</button><button data-v="0">Train &amp; bus only</button></div>
+  <div class="legend">"Train &amp; bus only" removes cable cars and chairlifts (the Gornergrat and Jungfrau railways still count as trains). Approach times and days are recalculated.</div></div>
+ <div class="f"><label class="h">Train from</label><div class="seg" id="origin"><button data-v="zrh" class="on">Zurich HB</button><button data-v="lsn">Lausanne</button></div></div>
+ <div class="f"><label class="h">Max train time</label><select id="tmax">
+  <option value="999">Any</option><option value="150">≤ 2:30 h</option><option value="180">≤ 3:00 h</option><option value="210">≤ 3:30 h</option><option value="240">≤ 4:00 h</option></select></div>
+ <div class="f"><label class="h">Days</label><div class="seg" id="days"><button data-v="all" class="on">Any</button><button data-v="1">1 day</button><button data-v="2">2 days</button><button data-v="3">3+ days</button></div></div>
+ <div class="f"><label class="h">Area</label><select id="group"><option value="">All areas</option></select></div>
+ <div class="f">
+  <label class="chk"><input type="checkbox" id="normal"> Normal routes only</label>
+  <label class="chk"><input type="checkbox" id="arch"> Include archive routes (older SAC guidebooks)</label>
+  <label class="chk"><input type="checkbox" id="desc"> Show descent-only routes</label>
+  <label class="chk"><input type="checkbox" id="hideDone"> Hide peaks I've done</label>
+ </div>
+ <div class="f"><label class="h">Sort peaks by</label><select id="sort">
+  <option value="alt">Height</option><option value="easy">Easiest matching route</option><option value="train">Train time</option><option value="name">Name</option></select></div>
+ <div class="legend">Train times: fastest connection on a Saturday morning (SBB timetable, Nov 2026) to the valley station where the approach starts. Summer-only buses (Ferpècle, Fionnay, Mauvoisin, Fafleralp, Grimsel, Gruben) are estimates. Days and approach times are estimates.</div>
+</aside>
+<main>
+ <div id="map"></div>
+ <div class="stats"><button id="toggleF" class="tag">☰ Filters</button><span><b id="nP">0</b> peaks</span><span><b id="nR">0</b> routes</span><span id="nD"></span><button id="reset" class="tag">Reset filters</button></div>
+ <div id="list"></div>
+ <footer>Data: SAC Tourenportal (sac-cas.ch) for 47 peaks, camptocamp.org for the Breithorn Eastern Twin, collected 9 Nov 2026. Photos © the photographers named, hosted by the SAC. Map © swisstopo. Train times: transport.opendata.ch (SBB). For private use only. Always check current conditions and the full route description before going.</footer>
+</main>
+</div>
+</section>
+
+<section id="v-log" class="view">
+<div class="logwrap">
+ <div class="kpis" id="kpis"></div>
+ <div class="card">
+  <h3 id="formTitle">Log a tour</h3>
+  <div class="grid2">
+   <div><label class="h">Date</label><input type="date" id="lDate"></div>
+   <div><label class="h">Peak</label><select id="lPeak"></select></div>
+   <div><label class="h">Route</label><select id="lRoute"></select></div>
+   <div><label class="h">Own route name (if "Other")</label><input type="text" id="lRouteOther" placeholder="e.g. traverse from …"></div>
+   <div><label class="h">Result</label><select id="lResult"><option>Summit</option><option>Turned back</option></select></div>
+   <div><label class="h">Season / mode</label><select id="lSeason"><option>Summer</option><option>Ski</option><option>Winter (on foot)</option></select></div>
+   <div><label class="h">Days</label><input type="number" id="lDays" min="1" max="10" value="2"></div>
+   <div><label class="h">Hut / start used</label><input type="text" id="lHut" placeholder="e.g. Monte-Rosa-Hütte"></div>
+   <div><label class="h">Transport</label><select id="lTransport"><option>Train + cable car</option><option>Train &amp; bus only</option><option>Car</option></select></div>
+   <div><label class="h">Partners</label><input type="text" id="lPartners" placeholder="names"></div>
+   <div><label class="h">Gear used</label><input type="text" id="lGear" placeholder="e.g. 50 m rope, 2 ice screws, crampons"></div>
+   <div><label class="h">Rating (1–5)</label><select id="lRating"><option value="">–</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+  </div>
+  <div style="margin-top:10px"><label class="h">Notes</label><textarea id="lNotes" rows="3" placeholder="conditions, times, what to remember next time"></textarea></div>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn" id="lSave">Save to log</button><button class="btn sec hidden" id="lCancel">Cancel edit</button><span id="syncState" class="muted"></span></div>
+ </div>
+ <div class="card"><h3>History</h3>
+  <div class="row2" style="margin-bottom:6px"><select id="hFilter"><option value="">All entries</option><option value="Summit">Summits only</option><option value="Turned back">Turned back only</option></select><input type="search" id="hSearch" placeholder="Search history"></div>
+  <div id="history"></div></div>
+ <div class="card"><h3>Still to do</h3><div class="togo" id="togo"></div></div>
+ <div class="card"><h3>Export / import</h3>
+  <p class="sub">Your log is saved in your private online account and synced across your devices. Export a copy whenever you like, or import a backup from the offline version of the finder.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec" id="exJson">Export backup (.json)</button><button class="btn sec" id="exCsv">Export table (.csv)</button><label class="btn sec">Import backup<input type="file" id="imJson" accept=".json,application/json" hidden></label></div>
+  <p class="sub" id="imMsg"></p></div>
+</div>
+</section>
+
+<section id="v-account" class="view">
+<div class="logwrap">
+ <div class="card"><h3>Your account</h3>
+  <p class="sub" id="accInfo"></p>
+  <div class="grid2">
+   <div><label class="h">Name shown in the app</label><input type="text" id="accName"></div>
+   <div style="align-self:end"><button class="btn sec" id="accNameSave">Save name</button> <span id="accNameMsg" class="okmsg"></span></div>
+  </div>
+ </div>
+ <div class="card"><h3>Change password</h3>
+  <div class="grid2">
+   <div><label class="h">New password (min. 8 characters)</label><input type="password" id="accPw1" autocomplete="new-password" style="width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px"></div>
+   <div><label class="h">Repeat</label><input type="password" id="accPw2" autocomplete="new-password" style="width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px"></div>
+  </div>
+  <div style="margin-top:10px"><button class="btn sec" id="accPwSave">Change password</button> <span id="accPwMsg" class="okmsg"></span></div>
+ </div>
+ <div class="card"><h3>Install on your phone</h3>
+  <p class="sub"><b>iPhone:</b> open this page in Safari → tap the Share button → "Add to Home Screen". <b>Android:</b> Chrome menu → "Install app". <b>PC:</b> Chrome/Edge → install icon in the address bar.</p>
+ </div>
+ <div class="card"><button class="btn sec" id="logout">Log out</button></div>
+</div>
+</section>
+
+<section id="v-admin" class="view">
+<div class="logwrap">
+ <div class="card"><h3>Invite a friend</h3>
+  <p class="sub">Creates an account and shows a temporary password. Send it to your friend together with the app link; they must choose their own password at first login. Each person only sees their own log.</p>
+  <div class="grid2">
+   <div><label class="h">Friend's e-mail</label><input type="text" id="adEmail" inputmode="email" autocapitalize="off"></div>
+   <div><label class="h">Name</label><input type="text" id="adName"></div>
+  </div>
+  <div style="margin-top:10px"><button class="btn" id="adCreate">Create account</button></div>
+  <div id="adResult" class="sub" style="margin-top:10px"></div>
+ </div>
+ <div class="card"><h3>Accounts</h3><div id="adUsers" class="tbl"></div></div>
+</div>
+</section>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
